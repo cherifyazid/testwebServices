@@ -12,12 +12,13 @@ import javax.faces.bean.ManagedBean;
  * @author cherif.yazid
  * this classe load data from the first run application 
  */
+
 @ManagedBean
 @ApplicationScoped
 public class data {
-//    Article ar= new Article();
 
-    ArrayList<Article> listArticle = new ArrayList<>();
+
+   static ArrayList<Article> listArticle = new ArrayList<>();
 
     public ArrayList<Article> loadArticles() {
 
@@ -41,11 +42,14 @@ public class data {
         article.setParent_id(parent_id);
 
         listArticle.add(article);
+        System.out.println("listArticle = " + listArticle.size());
         return listArticle;
 
     }
 
     public data() {
+               ArrayList<Article> listArticleload = new ArrayList<>();
+       // listArticleload = loadArticles();
     }
 
     @PostConstruct
@@ -53,4 +57,9 @@ public class data {
         ArrayList<Article> listArticleload = new ArrayList<>();
         listArticleload = loadArticles();
     }
+
+    public static ArrayList<Article> getListArticle() {
+        return listArticle;
+    }
+
 }
