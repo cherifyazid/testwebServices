@@ -35,6 +35,7 @@ public class sendServices {
     @ManagedProperty(value = "#{loadFromData}")
     private data myData;
 
+    
     //------------------------ PUT /articleservice/article/$article_id ----------------------------------------------------------------
     @PUT
     @Path("/article/{article_id}")
@@ -43,19 +44,26 @@ public class sendServices {
         JSONObject jsonObject = null;
         try {
             if (valentryJson != null) {
+                Article ar = new Article();
 
                 jsonObject = new JSONObject(valentryJson); // we have used lib jettison.jar to convert elements to json format
-
-                double weight = jsonObject.getDouble("weight");
-                String type = jsonObject.getString("type");
-                long parent_id = jsonObject.getLong("parent_id");
-
-                Article ar = new Article();
-                ar.setArticle_id(article_id);
-                ar.setType(type);
-                ar.setWeight(weight);
-                ar.setParent_id(parent_id);
-                myData.addArticle(article_id, weight, type, parent_id);
+                double weight;
+                if (jsonObject.has("weight")) {
+                    weight = jsonObject.getDouble("weight");
+                    ar.setWeight(weight);
+                    String type;
+                    if (jsonObject.has("type")) {
+                        type = jsonObject.getString("type");
+                        ar.setType(type);
+                        long parent_id;
+                        if (jsonObject.has("parent_id")) {
+                            parent_id = jsonObject.getLong("parent_id");
+                            ar.setArticle_id(article_id);
+                            myData = new data();
+                            myData.addArticle(article_id, weight, type, parent_id);
+                        }
+                    }
+                }
 
             }
         } catch (JSONException ex) {
@@ -64,18 +72,14 @@ public class sendServices {
         return jsonObject.toString();
     }
 
-    
-    
     //---------------------------GET /articleservice/article/$article_id
     @GET
     @Path("/article/find/{article_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String getArticlesById(@PathParam("article_id") int article_id) throws JSONException {
-        ArrayList<Article> listArticle = new ArrayList<Article>();
-        listArticle = myData.loadArticles();
-
+    
         JSONObject jo = new JSONObject();
-        for (Article article : listArticle) {
+        for (Article article : myData.getListArticle()) {
 
             if ((article.getArticle_id()).equals(article)) {
 
@@ -87,19 +91,16 @@ public class sendServices {
         }
         return jo.toString();
     }
-    
-    
 
     ///------------   GET /articleservice/types/$type
     @GET
     @Path("/types/{type}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getArticlesByType(@PathParam("type") int type) throws JSONException {
-        ArrayList<Article> listArticle = new ArrayList<Article>();
-        listArticle = myData.loadArticles();
+    public String getArticlesByType(@PathParam("type") String type) throws JSONException {
+        myData = new data();
         List<Long> l = new ArrayList<>();
         Gson g = new Gson(); /// we have user Gson-1.7.jar lib to convert list to json String
-        for (Article article : listArticle) {
+        for (Article article : myData.getListArticle()) {
 
             if ((article.getType()).equals(type)) {
                 l.add(article.getArticle_id());
@@ -109,23 +110,20 @@ public class sendServices {
         return g.toJson(l);
     }
 
-    
-    
     ////----------------------------GET /articleservice/types/$type
     @GET
     @Path("/sum/{article_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String getSumArticlesLinkedByIdParent(@PathParam("article_id") int article_id) throws JSONException {
-        ArrayList<Article> listArticle = new ArrayList<Article>();
-        listArticle = myData.loadArticles();
+        myData = new data();
 
         double sum = 0;
-        JSONObject jsonObject = null;
-        for (Article article : listArticle) {
+        JSONObject jsonObject;
+        jsonObject = new JSONObject();
+        for (Article article : myData.getListArticle()) {
 
             if ((article.getParent_id()) == article_id) {
 
-                jsonObject = new JSONObject();
                 sum = sum + article.getWeight();
 
             }
@@ -135,5 +133,4 @@ public class sendServices {
         return jsonObject.toString();
     }
 
-    
 }
